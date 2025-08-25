@@ -5,14 +5,39 @@ import { useNavigate } from "react-router-dom";
 
 const JoinForm = (props) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState({
+    username: "",
+    password: "",
+    email: "",
+  });
 
-  function changeValue(e) {}
+  function changeValue(e) {
+    setUser({
+      ...user,
+      [e.target.name]: e.target.value,
+    });
+  }
 
   async function submitJoin(e) {
     e.preventDefault(); // 새로고침 막기 (action 발동 막기)
+
+    try {
+      await axios({
+        method: "POST",
+        url: "http://localhost:8080/join",
+        data: user, // axios는 JS Object를 전달하면 JSON으로 변환해서 전달
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      navigate("/login-form");
+    } catch (error) {
+      // console.log(error);
+      alert(error.response.data.msg);
+    }
   }
 
+  // console.log(user);
   return (
     <Form>
       <Form.Group>
