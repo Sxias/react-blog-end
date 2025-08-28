@@ -5,19 +5,57 @@ import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
 const UpdateForm = (props) => {
-  const { id } = 1;
+  const { id } = useParams();
   const navigate = useNavigate();
+  const jwt = useSelector((state) => state.jwt);
 
-  const [board, setBoard] = useState({});
+  const [board, setBoard] = useState({
+    title: "",
+    content: "",
+  });
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, []);
 
   async function updateSubmit(e) {
     e.preventDefault();
+    try {
+      await axios({
+        method: "put",
+        url: `http://localhost:8080/api/boards/${id}`,
+        data: board,
+        headers: {
+          Authorization: jwt,
+        },
+      });
+      navigate(`/board/${id}`);
+    } catch (error) {
+      alert(error.response.data.msg);
+    }
   }
 
-  const changeValue = (e) => {};
+  const changeValue = (e) => {
+    setBoard({ ...board, [e.target.name]: e.target.value });
+  };
 
-  async function fetchUserInfo() {}
+  async function fetchUserInfo() {
+    let response = await axios({
+      method: "get",
+      url: `http://localhost:8080/api/boards/${id}`,
+      headers: {
+        Authorization: jwt,
+      },
+    });
 
+    let responseBody = response.data;
+    setBoard({
+      title: responseBody.body.title,
+      content: responseBody.body.content,
+    });
+  }
+
+  console.log(board);
   return (
     <div>
       <h1>글수정</h1>
@@ -26,7 +64,7 @@ const UpdateForm = (props) => {
         <Form.Group>
           <Form.Label>Title</Form.Label>
           <Form.Control
-            value={"제목1"}
+            value={board.title}
             type="text"
             placeholder="Enter title"
             name="title"
@@ -39,7 +77,7 @@ const UpdateForm = (props) => {
           <Form.Control
             as="textarea"
             row={5}
-            value={"내용1"}
+            value={board.content}
             name="content"
             onChange={changeValue}
           />

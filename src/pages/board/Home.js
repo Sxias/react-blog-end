@@ -21,42 +21,28 @@ const Home = () => {
     boards: [],
   });
 
-  // --- 디바운스된 setter: 최초 1회 생성, 언마운트 시 cancel ---
-  const debouncedSetKeyword = useRef(
-    _.debounce((value) => {
-      setKeyword(value); // 디바운스 후에만 서버요청 트리거 상태 변경
-      setPage(0); // 새 키워드면 페이지를 0으로 리셋 (옵션)
-    }, 600) // 3초가 너무 길다면 600~800ms 권장
-  );
+  // 🔹 rawKeyword가 바뀔 때마다 600ms 뒤에 keyword 반영 (디바운스)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setKeyword(rawKeyword);
+    }, 600);
+
+    return () => clearTimeout(t); // 입력이 다시 들어오면 이전 타이머 취소
+  }, [rawKeyword]);
 
   useEffect(() => {
-    return () => {
-      // 컴포넌트 언마운트 시 디바운스 타이머 취소
-      debouncedSetKeyword.current.cancel();
-    };
-  }, []);
-
-  // --- 서버 호출: page, keyword(디바운스된 값) 변경 시에만 ---
-  useEffect(() => {
-    const source = axios.CancelToken.source();
-
-    (async () => {
-      try {
-        const res = await axios.get("http://localhost:8080", {
-          params: { page, keyword },
-          cancelToken: source.token,
-        });
-        setModel(res.data.body);
-      } catch (e) {
-        if (!axios.isCancel(e)) {
-          console.error(e);
-        }
-      }
-    })();
-
-    // 의존성 변경/언마운트 시 이전 요청 취소
-    return () => source.cancel("request aborted due to new search");
+    apiHome();
   }, [page, keyword]);
+
+  async function apiHome() {
+    let response = await axios({
+      method: "get",
+      url: `http://localhost:8080?page=${page}&keyword=${keyword}`,
+    });
+
+    let responseBody = response.data;
+    setModel(responseBody.body);
+  }
 
   function prev() {
     setPage((p) => p - 1);
@@ -70,7 +56,6 @@ const Home = () => {
   function changeValue(e) {
     const value = e.target.value;
     setRawKeyword(value); // 즉시 DOM 갱신
-    debouncedSetKeyword.current(value); // 요청은 지연
   }
 
   return (

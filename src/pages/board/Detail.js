@@ -1,29 +1,122 @@
-import React, { useState } from "react";
-import { Button } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Button, Card, Form } from "react-bootstrap";
+import { useSelector } from "react-redux";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import ReplyItem from "../../components/ReplyItem";
 
 const Detail = (props) => {
-  const { id } = 1;
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [board, setBoard] = useState({});
+  const jwt = useSelector((state) => state.jwt);
+  const [board, setBoard] = useState({
+    id: undefined,
+    title: "",
+    content: "",
+    userId: undefined,
+    username: "",
+    owner: false,
+    replies: [],
+  });
+  const [reply, setReply] = useState({});
 
-  async function fetchDetail(boardId) {}
+  async function fetchDetail(boardId) {
+    let response = await axios({
+      method: "get",
+      url: `http://localhost:8080/api/boards/${boardId}`,
+      headers: {
+        Authorization: jwt,
+      },
+    });
 
-  async function fetchDelete(boardId) {}
+    let responseBody = response.data;
+    setBoard(responseBody.body);
+  }
+
+  useEffect(() => {
+    fetchDetail(id);
+  }, []);
+
+  async function fetchDelete(boardId) {
+    await axios({
+      method: "delete",
+      url: `http://localhost:8080/api/boards/${boardId}`,
+      headers: {
+        Authorization: jwt,
+      },
+    });
+    navigate("/");
+  }
+
+  function changeValue(e) {
+    setReply({ ...reply, [e.target.name]: e.target.value });
+  }
+
+  async function fetchPostReply(boardId) {}
 
   return (
     <div>
-      <Link to={`/update-form/${board.id}`} className="btn btn-warning">
-        수정
-      </Link>
-      <Button className="btn btn-danger" onClick={() => fetchDelete(board.id)}>
-        삭제
-      </Button>
+      {board.owner ? (
+        <>
+          {/* id로 통신을 해도 되고, props로 담아서 들고가도 됨 */}
+          <Link to={`/update-form/${board.id}`} className="btn btn-warning">
+            수정
+          </Link>
+          <Button
+            className="btn btn-danger"
+            onClick={() => fetchDelete(board.id)}
+          >
+            삭제
+          </Button>
+        </>
+      ) : (
+        <></>
+      )}
+
       <br />
       <br />
-      <h1>제목1</h1>
+      <h1>{board.title}</h1>
       <hr />
-      <div>내용1</div>
+      <div>{board.content}</div>
+      {/* 댓글 입력 폼 */}
+      <Card className="mb-4 shadow-sm border-0">
+        <Card.Body>
+          <Form onSubmit={""}>
+            <Form.Group className="mb-3">
+              <Form.Control
+                as="textarea"
+                rows={3}
+                placeholder="댓글을 입력하세요..."
+                value={""}
+                onChange={""}
+              />
+            </Form.Group>
+            <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+              <Button variant="primary" type="submit">
+                댓글 작성
+              </Button>
+            </div>
+          </Form>
+        </Card.Body>
+      </Card>
+
+      {/* 댓글 목록 */}
+      <div className="comment-list">
+        {board.replies.length > 0 ? (
+          board.replies.map((reply) => (
+            <ReplyItem
+              key={reply.id}
+              id={reply.id}
+              comment={reply.comment} // 댓글 내용
+              userId={reply.userId}
+              username={reply.username}
+              owner={reply.owner}
+            />
+          ))
+        ) : (
+          <p className="text-muted">아직 댓글이 없습니다.</p>
+        )}
+      </div>
     </div>
   );
 };
