@@ -18,7 +18,10 @@ const Detail = (props) => {
     owner: false,
     replies: [],
   });
-  const [reply, setReply] = useState({});
+  const [reply, setReply] = useState({
+    comment: "",
+    boardId: id,
+  });
 
   async function fetchDetail(boardId) {
     let response = await axios({
@@ -31,6 +34,12 @@ const Detail = (props) => {
 
     let responseBody = response.data;
     setBoard(responseBody.body);
+  }
+
+  function notifyDeleteReply(replyId) {
+    let newReplies = board.replies.filter((reply) => reply.id !== replyId);
+    board.replies = newReplies;
+    setBoard({ ...board });
   }
 
   useEffect(() => {
@@ -52,7 +61,22 @@ const Detail = (props) => {
     setReply({ ...reply, [e.target.name]: e.target.value });
   }
 
-  async function fetchPostReply(boardId) {}
+  async function submitReply(e) {
+    e.preventDefault();
+
+    let response = await axios({
+      method: "post",
+      url: `http://localhost:8080/api/boards`,
+      data: reply,
+      headers: {
+        Authorization: jwt,
+      },
+    });
+
+    let responseBody = response.data;
+    board.replies = [responseBody, ...board.replies];
+    setBoard({ ...board });
+  }
 
   return (
     <div>
@@ -87,12 +111,13 @@ const Detail = (props) => {
                 as="textarea"
                 rows={3}
                 placeholder="댓글을 입력하세요..."
-                value={""}
-                onChange={""}
+                name="comment"
+                value={reply.comment}
+                onChange={changeValue}
               />
             </Form.Group>
             <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-              <Button variant="primary" type="submit">
+              <Button variant="primary" type="submit" onClick={submitReply}>
                 댓글 작성
               </Button>
             </div>
@@ -104,14 +129,7 @@ const Detail = (props) => {
       <div className="comment-list">
         {board.replies.length > 0 ? (
           board.replies.map((reply) => (
-            <ReplyItem
-              key={reply.id}
-              id={reply.id}
-              comment={reply.comment} // 댓글 내용
-              userId={reply.userId}
-              username={reply.username}
-              owner={reply.owner}
-            />
+            <ReplyItem reply={reply} notifyDeleteReply={notifyDeleteReply} />
           ))
         ) : (
           <p className="text-muted">아직 댓글이 없습니다.</p>

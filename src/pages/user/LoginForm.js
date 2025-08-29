@@ -33,7 +33,16 @@ const LoginForm = (props) => {
       navigate("/");
     } catch (error) {
       // console.log(error);
-      alert(error.response.data.msg);
+      if (error.response) {
+        // 서버가 응답했지만 에러 코드 (400, 401, 500 등)
+        alert(error.response.data.msg || "로그인 실패");
+      } else if (error.request) {
+        // 요청은 갔지만 응답이 없음 (CORS 문제, 서버 꺼짐 등)
+        alert("서버 응답이 없습니다. 서버 상태를 확인하세요.");
+      } else {
+        // 그 외 (axios 설정 문제 등)
+        alert("로그인 요청 중 오류 발생: " + error.message);
+      }
     }
   }
 

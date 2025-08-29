@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Form, FormControl, Pagination } from "react-bootstrap";
 import BoardItem from "../../components/BoardItem";
 import axios from "axios";
-import _ from "lodash";
 
 const Home = () => {
   const [page, setPage] = useState(0);
