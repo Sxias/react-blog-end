@@ -7,8 +7,8 @@ import ReplyItem from "../../components/ReplyItem";
 
 const Detail = (props) => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const jwt = useSelector((state) => state.jwt);
+  const navigate = useNavigate();
   const [board, setBoard] = useState({
     id: undefined,
     title: "",
@@ -18,22 +18,35 @@ const Detail = (props) => {
     owner: false,
     replies: [],
   });
+
   const [reply, setReply] = useState({
     comment: "",
     boardId: id,
   });
 
-  async function fetchDetail(boardId) {
+  const changeValue = (e) => {
+    setReply({ ...reply, comment: e.target.value });
+  };
+
+  async function submitReply(e) {
+    e.preventDefault();
+
     let response = await axios({
-      method: "get",
-      url: `http://localhost:8080/api/boards/${boardId}`,
+      method: "POST",
+      url: `http://localhost:8080/api/replies`,
+      data: reply,
       headers: {
         Authorization: jwt,
       },
     });
 
-    let responseBody = response.data;
-    setBoard(responseBody.body);
+    let responseBody = response.data.body;
+    // replyId, comment, boardId, userId
+
+    // id, comment, username, userId, owner
+    console.log("머지", responseBody);
+    board.replies = [responseBody, ...board.replies];
+    setBoard({ ...board });
   }
 
   function notifyDeleteReply(replyId) {
@@ -46,9 +59,21 @@ const Detail = (props) => {
     fetchDetail(id);
   }, []);
 
+  async function fetchDetail(boardId) {
+    let response = await axios({
+      method: "GET",
+      url: `http://localhost:8080/api/boards/${boardId}`,
+      headers: {
+        Authorization: jwt,
+      },
+    });
+    let responseBody = response.data;
+    setBoard(responseBody.body);
+  }
+
   async function fetchDelete(boardId) {
     await axios({
-      method: "delete",
+      method: "DELETE",
       url: `http://localhost:8080/api/boards/${boardId}`,
       headers: {
         Authorization: jwt,
@@ -57,32 +82,12 @@ const Detail = (props) => {
     navigate("/");
   }
 
-  function changeValue(e) {
-    setReply({ ...reply, [e.target.name]: e.target.value });
-  }
-
-  async function submitReply(e) {
-    e.preventDefault();
-
-    let response = await axios({
-      method: "post",
-      url: `http://localhost:8080/api/boards`,
-      data: reply,
-      headers: {
-        Authorization: jwt,
-      },
-    });
-
-    let responseBody = response.data;
-    board.replies = [responseBody, ...board.replies];
-    setBoard({ ...board });
-  }
-
+  console.log(board);
+  // update-form 갈때 상세보기의 상태 Board를 가져가는 것 연습해보기
   return (
     <div>
       {board.owner ? (
         <>
-          {/* id로 통신을 해도 되고, props로 담아서 들고가도 됨 */}
           <Link to={`/update-form/${board.id}`} className="btn btn-warning">
             수정
           </Link>
@@ -102,6 +107,9 @@ const Detail = (props) => {
       <h1>{board.title}</h1>
       <hr />
       <div>{board.content}</div>
+      <br />
+      <br />
+      <hr />
       {/* 댓글 입력 폼 */}
       <Card className="mb-4 shadow-sm border-0">
         <Card.Body>
@@ -111,7 +119,6 @@ const Detail = (props) => {
                 as="textarea"
                 rows={3}
                 placeholder="댓글을 입력하세요..."
-                name="comment"
                 value={reply.comment}
                 onChange={changeValue}
               />
@@ -127,13 +134,9 @@ const Detail = (props) => {
 
       {/* 댓글 목록 */}
       <div className="comment-list">
-        {board.replies.length > 0 ? (
-          board.replies.map((reply) => (
-            <ReplyItem reply={reply} notifyDeleteReply={notifyDeleteReply} />
-          ))
-        ) : (
-          <p className="text-muted">아직 댓글이 없습니다.</p>
-        )}
+        {board.replies.map((reply) => (
+          <ReplyItem reply={reply} notifyDeleteReply={notifyDeleteReply} />
+        ))}
       </div>
     </div>
   );

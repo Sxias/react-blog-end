@@ -3,11 +3,11 @@ import React, { useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { login } from "../../store";
+import reducer, { login } from "../../store";
 
 const LoginForm = (props) => {
-  const navigate = useNavigate();
   const dispatch = useDispatch(); // reducer 호출
+  const navigate = useNavigate();
 
   const [user, setUser] = useState({
     username: "",
@@ -21,33 +21,28 @@ const LoginForm = (props) => {
       let response = await axios({
         method: "POST",
         url: "http://localhost:8080/login",
-        data: user, // axios는 JS Object를 전달하면 JSON으로 변환해서 전달
+        data: user, // axios는 javascript object를 전달하면 json으로 변환해서 전달함
         headers: {
           "Content-Type": "application/json",
         },
       });
 
+      console.log(response);
+
       let jwt = response.headers.authorization;
       localStorage.setItem("jwt", jwt);
+
       dispatch(login(jwt));
+
       navigate("/");
     } catch (error) {
-      // console.log(error);
-      if (error.response) {
-        // 서버가 응답했지만 에러 코드 (400, 401, 500 등)
-        alert(error.response.data.msg || "로그인 실패");
-      } else if (error.request) {
-        // 요청은 갔지만 응답이 없음 (CORS 문제, 서버 꺼짐 등)
-        alert("서버 응답이 없습니다. 서버 상태를 확인하세요.");
-      } else {
-        // 그 외 (axios 설정 문제 등)
-        alert("로그인 요청 중 오류 발생: " + error.message);
-      }
+      //console.log(error);
+      alert(error.response.data.msg);
     }
   }
 
   const changeValue = (e) => {
-    // 유효성 검사
+    // 통신해서 유효성 검사
 
     setUser({
       ...user,

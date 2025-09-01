@@ -20,9 +20,10 @@ const UpdateForm = (props) => {
 
   async function updateSubmit(e) {
     e.preventDefault();
+
     try {
       await axios({
-        method: "put",
+        method: "PUT",
         url: `http://localhost:8080/api/boards/${id}`,
         data: board,
         headers: {
@@ -36,18 +37,20 @@ const UpdateForm = (props) => {
   }
 
   const changeValue = (e) => {
-    setBoard({ ...board, [e.target.name]: e.target.value });
+    setBoard({
+      ...board,
+      [e.target.name]: e.target.value,
+    });
   };
 
   async function fetchUserInfo() {
     let response = await axios({
-      method: "get",
+      method: "GET",
       url: `http://localhost:8080/api/boards/${id}`,
       headers: {
         Authorization: jwt,
       },
     });
-
     let responseBody = response.data;
     setBoard({
       title: responseBody.body.title,
@@ -56,6 +59,7 @@ const UpdateForm = (props) => {
   }
 
   console.log(board);
+
   return (
     <div>
       <h1>글수정</h1>

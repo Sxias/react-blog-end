@@ -25,19 +25,20 @@ const JoinForm = (props) => {
       await axios({
         method: "POST",
         url: "http://localhost:8080/join",
-        data: user, // axios는 JS Object를 전달하면 JSON으로 변환해서 전달
+        data: user, // axios는 javascript object를 전달하면 json으로 변환해서 전달함
         headers: {
           "Content-Type": "application/json",
         },
       });
+
       navigate("/login-form");
     } catch (error) {
-      // console.log(error);
+      //console.log(error);
       alert(error.response.data.msg);
     }
   }
 
-  // console.log(user);
+  //console.log(user);
   return (
     <Form>
       <Form.Group>

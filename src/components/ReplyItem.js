@@ -1,16 +1,15 @@
 import axios from "axios";
 import React from "react";
-import { Card, Button } from "react-bootstrap";
+import { Button, Card } from "react-bootstrap";
 import { useSelector } from "react-redux";
 
-const ReplyItem = (props) => {
+export default function ReplyItem(props) {
   const { reply, notifyDeleteReply } = props;
   const jwt = useSelector((state) => state.jwt);
 
   async function deleteReply(replyId) {
-    console.log("jwt in Redux:", jwt); // "Bearer ..." 형태인지 확인
     await axios({
-      method: "delete",
+      method: "DELETE",
       url: `http://localhost:8080/api/replies/${replyId}`,
       headers: {
         Authorization: jwt,
@@ -18,6 +17,7 @@ const ReplyItem = (props) => {
     });
     notifyDeleteReply(replyId);
   }
+
   return (
     <Card className="mb-3 shadow-sm border-0">
       <Card.Body>
@@ -30,7 +30,6 @@ const ReplyItem = (props) => {
             </div>
             <p className="mb-2">{reply.comment}</p>
           </div>
-
           {reply.owner && (
             <Button variant="danger" onClick={() => deleteReply(reply.id)}>
               삭제
@@ -40,6 +39,4 @@ const ReplyItem = (props) => {
       </Card.Body>
     </Card>
   );
-};
-
-export default ReplyItem;
+}
